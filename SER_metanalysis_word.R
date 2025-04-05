@@ -27,39 +27,7 @@ library(dplyr)
 library(ggbeeswarm)
 library(ggplot2)
 library(multcompView)
-test_plot<-function(model, var,df_with_tda,save_path=NULL){
-  print(var)
-  
-  # Perform Tukey post hoc comparisons on the Drug factor
-  tukey_comp <- glht(model, linfct = mcp(Drug = "Tukey"))
-  tukey_summary <- summary(tukey_comp)
-  print(tukey_summary)
-  
-  # Create the combined plot
-  p <- ggplot(df_with_tda, aes_string(x = "Drug", y = var)) +
-    # Boxplot without default outliers
-    geom_boxplot(outlier.shape = NA) +
-    # Beeswarm points, colored by Participant
-    geom_beeswarm(aes(color = Participant), size = 3, cex = 3) +
-    # Connect the same Participant's data across conditions with a faint line,
-    # with the same color as the participant.
-    # geom_line(aes(group = Participant, color = Participant), alpha = 0.3) +
-    # Add the significance letters above each boxplot
-    # geom_text(data = pos_df, aes(x = Drug, y = label_y, label = sig),
-    #           color = "black", size = 5) +
-    # Remove the legend and use a clean theme
-    theme_bw() +
-    theme(legend.position = "none") +
-    labs(title = paste("Boxplot and Beeswarm Plot for", var),
-         x = "Drug",
-         y = var)
-  
-  print(p)
-  if (!is.null(save_path)) {
-    # Define the file name; here we use the variable name as part of the file name
-    ggsave(filename = save_path, plot = p, width = 8, height = 6)
-  }
-}
+
 
 z_norm<-function(df, var){
   df_placebo<-subset(df, df$Drug=='PL')
@@ -102,80 +70,33 @@ library(clubSandwich)
 
 
 
-analysis='distance'
+analysis='word_freq'
+analysis='trajectory'
 
-analysis='DMD'
-
-analysis='syntax'
-
-analysis='TDA'
-
-
-if (analysis=='distance'){
-  variable_list<- c('length',
-                    #'semantic_density_mean_sentence_embeddings',
-                  'conversational_distance_sentence_embeddings',
-                  'av_distance_mean_sentence_embeddings',
-              #  'av_distance_entropy_sentence_embeddings',
-                  'conversational_breadth_mean_sentence_embeddings',
-                  'av_distance_skewness_sentence_embeddings',
-                  'av_distance_coeff_sentence_embeddings',
-                  'information')
-  working_dir <- "/home/ll16598/Documents/POSTDOC/semantic_distance_output/"
-} else if (analysis=='DMD'){
-                    variable_list<- c('energy_top2',
-                                      #'energy_top3', 
-                                      'largest_abs_eig',
-                                      #'num_unstable_eigs',
-                                      'num_stable_eigs','modal_participation_ratio'
-                                      ,'spectral_gap','decay_spectral_index','mode_amplitude_entropy',
-                                      'koopman_condition_number')
-                    working_dir <- "/home/ll16598/Documents/POSTDOC/DMD_output/"
-                    
-}else if (analysis=='syntax'){
-  variable_list<- c('depth_mean',
-                    'depth_median',
-                    'depth_mode',
-                    'depth_std',
-                    'complexity_mean',
-                    'complexity_median',
-                    'complexity_mode',
-                    'complexity_std')
-  
-  working_dir <- "/home/ll16598/Documents/POSTDOC/syntax_output/"
-}else if (analysis=='TDA'){
-  variable_list<- c('rt',
-                    #'rt_centroid', 
-                    'density',
-                    'edges',
-                    'triangle_density', 
-                    'tetra_density',
-                    'penta', 
-                    'nodes',
-                 #   'diameter',
-                   # 'wighted_diameter',
-                    'shortest_path_weighted','shortest_path_unweighted',
-                 'shortest_path_weighted_prop','shortest_path_unweighted_prop',
-                 
-                 #  'num_triangles', 'num_tetrahedra',
-                    'modularity_louvain', 'modularity_unw','spectral_gap','num_comms_unw','num_comms',
-                'clustering_coefficient', 'max_degree',
-                    'mean_degree', 'max_betweenness', 'mean_betweenness', 'max_strength',
-                    'mean_strength', 
-                'fiedler_value', 'largest_laplacian_eigenvalue',
-                    'death_rate_dim0', 'mean_persistence_dim0',
-                    'max_persistence_dim0', 'std_persistence_dim0', 'skewness_dim0',
-                    'kurtosis_dim0', 'entropy_dim0', 'number_dim0',
-                
-  'birth_rate_dim1',
-  'death_rate_dim1',
-  'mean_persistence_dim1', 'max_persistence_dim1',
-  'std_persistence_dim1', 'skewness_dim1', 'kurtosis_dim1',
-   'entropy_dim1', 'number_dim1','sum_persistence_dim0','sum_persistence_dim1','sum_persistence_dim2')
-#  working_dir <- "/media/ll16598/One Touch/TDA_output_filtered/sparse_0.5/"
-  working_dir<-'/home/ll16598/Documents/POSTDOC/TDA_output/'
-
+if (analysis=='word_freq'){
+  variable_list<- c(#'noun_entropy', 'adj_entropy', 'verb_entropy', #'noun_frequency',
+                    #'adj_frequency', 
+                   # 'verb_frequency',
+                   # 'avg_freq_and_gap',
+                   'avg_frequency',
+                    'avg_gap'
+                   )
+  working_dir <- "/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/word_count_results/"
+} else if (analysis=='trajectory'){
+  variable_list<- c('trajectory_length',
+                    'semantic_speed', 'semantic_acceleration',
+                    'mean_curvature', 'recurrence_rate',#'determinism', 'laminarity','permutation_entropy',
+                    'fractal_dimension',
+                    'RR', 'DET', 'L',
+                    'Lmax', 'DIV', 'Lentr', 'LAM', 'V', 'Vmax', 'Ventr', 'W', 'Wentr'#,#,
+                  #  'DET/RR', 'LAM/DET',
+                   # 'diagonal_freq', 
+                  # 'vertical_freq',#,
+                 #   'white_vertical_freq'
+                    )
+  working_dir <- "/home/ll16598/Documents/POSTDOC/trajectory_output/"
 }
+
 
 #
 
@@ -184,25 +105,24 @@ if (analysis=='distance'){
 JUST_SER=FALSE
 RANDOM_TASK=FALSE
 window=80
-window='window'#'utterances'
-if(window=='window'){
-  working_dir<-'/mnt/onetouch/TDA/TDA_output/'
-}
 overlap=0.1
 POOL_SER=FALSE ##TO POOL THE SER EXPERIMENTAL CONDITIONS
 z_normalise=TRUE
 dim_reduction='50'
+just_small_talk=FALSE
 }
-if(JUST_SER==TRUE){
+initial_var
+if(just_small_talk==TRUE){
+  df_names=c('MASM','cleaned_DEI')#'SER_monologs',
+  
+}else if(JUST_SER==TRUE){
 df_names = c("SER_IPSP", "PEM_df")}else if (small_talk==TRUE){
-  df_names=c(  'SER_IPSP','MASM','cleaned_DEI','SER_monologs')#,'SER_monologs',#,'PEM_df'
+  df_names=c(  'SER_IPSP','PEM_df','MASM','cleaned_DEI')#,'SER_monologs')
   }else{
-    df_names=c('SER_IPSP','SER_monologs','PEM_df')#'SER_monologs',
+    df_names=c('SER_IPSP','SER_monologs','PEM_df')#,
     
 }
 
-span=40
-# Keeps digits and decimal points
 z_norm<-function(df, var){
   df[[var]]<-df[[var]]+10
   df_placebo<-subset(df, df$Drug=='PL')
@@ -221,37 +141,45 @@ remove_bracs<-function(df, var){
   }
   return(df)
 }
-df_with_tda
+fix_ser<-function(df_with_tda){
+df_drug=read.csv('/home/ll16598/Documents/POSTDOC/Context-DATM/atom_assigned_dfs/df_monolog_244.csv')
+df_with_tda$Participant<-df_with_tda$participant
+df_with_tda$Session<-df_with_tda$session
+df_with_tda$Participant <- gsub("[^0-9]", "", df_with_tda$Participant)
+df_with_tda$Participant <- as.numeric(gsub("[^0-9]", "", df_with_tda$Participant))
+df_with_tda$Drug<-df_with_tda$Drug.x
+df_with_tda <- df_with_tda %>%
+  left_join(df_drug, by = c("Participant", "Session"))
+return(df_with_tda)}
 
 #ser_df_with_tda$Drug
 #df_SER2$Drug
 all_meta=list()
-
-for (span in c(80,60)){
-  filter_length=5
+#f_with_tda$D
+#df_with_tda[[initial_var]]
+filter_length=5
+initial_var
+#df_with_tda[[initial_var]]
+df_with_tda$Session
 meta_save_dir='/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/metanalysis_results/'
+for (span in c(80,70,60,50)){
 for(initial_var in variable_list){
   # We assume these variables are already defined somewhere above:
   # working_dir, df_names, window, overlap, z_normalise, initial_var, etc.
   # We'll create meta_data to accumulate effect sizes from each df_name
   meta_data <- data.frame()
-  print(initial_var)
+ # print(initial_var)
   for (df_name in df_names) {
-    print(df_name)
+  #  print(df_name)
     ## Decide on the CSV filename as in your original code
     
     wind <- as.character(window)
-    if (analysis=='syntax'){
-      csv_file <- paste0(working_dir, df_name, "_syntax_results.csv")                  ##MEAN if TDA
-    }else if(wind=='utterances'){
-      csv_file <- paste0(working_dir, df_name, "_", span, "_mean_",dim_reduction,"_utterance_", analysis, "_results_seedX.csv")
-      }else if(wind=='window'){
-        csv_file <- paste0(working_dir, df_name, "_", span, "_mean_",dim_reduction,"_window_", analysis, "_results.csv")
-        }else{
-      step <- as.character(window * overlap)
-    csv_file <- paste0(working_dir, df_name, "_", wind, "_", step, "_", analysis, "_results.csv")}
+    if (analysis=='word_freq'){
+      csv_file <- paste0(working_dir, df_name, "_word_freq.csv")                  ##MEAN if TDA
+    }else if (analysis=='trajectory'){
+        csv_file <- paste0(working_dir, df_name,'_',as.character(span),'_',dim_reduction, "_utterance_trajectory_results.csv")                  ##MEAN if TDA
+    }
     df_with_tda <- read.csv(csv_file)
-    
     if(df_name=='MASM'){
       df_with_tda$Drug<-df_with_tda$condition
       df_with_tda$Drug[df_with_tda$Drug == "['PLC']"] <- "PL"
@@ -264,20 +192,11 @@ for(initial_var in variable_list){
       df_with_tda$Drug[df_with_tda$Drug == "['MA.txt']"] <- "MA"
       df_with_tda$participant_numbers_only <- as.numeric(gsub("\\D+", "", df_with_tda$participant))
     #  df_with_tda<-subset(df_with_tda,df_with_tda$participant_numbers_only<521)
-    }
-    if (analysis=='TDA'){
-      df_with_tda$edge_density      <- df_with_tda$edges / choose(df_with_tda$nodes, 2)
-      df_with_tda$triangle_density  <- df_with_tda$tris  / choose(df_with_tda$nodes, 3)
-      df_with_tda$tetra_density     <- df_with_tda$tetra / choose(df_with_tda$nodes, 4)
-      df_with_tda$shortest_path_weighted_prop<-df_with_tda$shortest_path_weighted/df_with_tda$nodes
-      df_with_tda$shortest_path_unweighted_prop<-df_with_tda$shortest_path_unweighted/df_with_tda$nodes
-      
+    }else if(df_name=='SER_IPSP'){
+      df_with_tda<-fix_ser(df_with_tda)
     }
     nrow(df_with_tda)
     df_with_tda<-subset(df_with_tda,df_with_tda$length>=filter_length)
-    print('NOT FILTERING LENGTH')
-   # print(nrow(df_with_tda))
-    # Convert 0 to "PL" (placebo), ensure "Drug" is a factor
     df_with_tda$Drug[df_with_tda$Drug == 0.00] <- "PL"
     
     if (POOL_SER==TRUE){
@@ -394,6 +313,7 @@ for(initial_var in variable_list){
       random = list(~ 1 | EXP_ID),
       data = meta_data,
       method = "REML"
+    
     )
   }
   
@@ -406,6 +326,7 @@ for(initial_var in variable_list){
   # If there's only one coefficient (intercept), its p-value is usually at index [1]
   p_val <- res_sum$pval[1]
   if (p_val<0.10){
+    if (analysis=='trajectory'){
   print(res_sum)
   print(initial_var)
   # Now insert that p-value into the forest plot title:
@@ -413,10 +334,24 @@ for(initial_var in variable_list){
     res,
     slab = meta_data$Study,
     main = paste0(
-      initial_var, " ", as.character(span),
-      " (p=", round(p_val, 4), ")"
+      initial_var,
+      " (p=", round(p_val, 4), ")", span
     )
-  )}
+  )}else{
+    print(res_sum)
+    print(initial_var)
+    # Now insert that p-value into the forest plot title:
+    forest(
+      res,
+      slab = meta_data$Study,
+      main = paste0(
+        initial_var,
+        " (p=", round(p_val, 4), ")"
+      )
+    )
+  }
+  
+  }
   # Export forest-plot data if desired
   study_data <- data.frame(
     Study  = meta_data$Study,
@@ -435,83 +370,21 @@ for(initial_var in variable_list){
   )
   
   forest_data <- rbind(study_data, overall_row)
-  forest_data$span<-span
+ # forest_data$span<-span
   forest_data$p_val <- rep(p_val, nrow(forest_data))
   
  # all_meta=c(all_meta,forest_data)
-  if (analysis=='syntax'){
-    name_to_save= paste0(meta_save_dir, initial_var, "syntax_forest_plot_data.csv")
-  }else{  name_to_save= paste0(meta_save_dir, initial_var, "_", as.character(span), "utt_forest_plot_data.csv")
-}
+  name_to_save= paste0(meta_save_dir, initial_var,'_',as.character(span), "_forest_plot_data.csv")
+
   write.csv(
     forest_data, name_to_save, 
     row.names = FALSE)
 }}
 
-
-test_plot<-function(model, var,df_with_tda,save_path=NULL){
-  print(var)
-  
-  # Perform Tukey post hoc comparisons on the Drug factor
-  tukey_comp <- glht(model, linfct = mcp(Drug = "Tukey"))
-  tukey_summary <- summary(tukey_comp)
-  print(tukey_summary)
-  
-  # Create the combined plot
-  p <- ggplot(df_with_tda, aes_string(x = "Drug", y = var)) +
-    # Boxplot without default outliers
-    geom_boxplot(outlier.shape = NA) +
-    # Beeswarm points, colored by Participant
-    geom_beeswarm(aes(color = Participant), size = 3, cex = 3) +
-    # Connect the same Participant's data across conditions with a faint line,
-    # with the same color as the participant.
-    # geom_line(aes(group = Participant, color = Participant), alpha = 0.3) +
-    # Add the significance letters above each boxplot
-    # geom_text(data = pos_df, aes(x = Drug, y = label_y, label = sig),
-    #           color = "black", size = 5) +
-    # Remove the legend and use a clean theme
-    theme_bw() +
-    theme(legend.position = "none") +
-    labs(title = paste("Boxplot and Beeswarm Plot for", var),
-         x = "Drug",
-         y = var)
-  
-  print(p)
-  if (!is.null(save_path)) {
-    # Define the file name; here we use the variable name as part of the file name
-    ggsave(filename = save_path, plot = p, width = 8, height = 6)
-  }
-}
-
-###LMM
-variable_list<- c('rt',
-                  #'rt_centroid', 
-                  'density',
-                  'edges',
-                  'triangle_density', 
-                  'tetra_density',
-                  'penta', 
-                  'nodes',
-                  'shortest_path_weighted','shortest_path_unweighted',
-                  #  'num_triangles', 'num_tetrahedra',
-                  'modularity_louvain', 'modularity_unw','spectral_gap','num_comms_unw','num_comms',
-                  'clustering_coefficient', 'max_degree',
-                  'mean_degree', 'max_betweenness', 'mean_betweenness', 'max_strength',
-                  'mean_strength', 
-                  'fiedler_value', 'largest_laplacian_eigenvalue',
-                  'death_rate_dim0', 'mean_persistence_dim0',
-                  'max_persistence_dim0', 'std_persistence_dim0', 'skewness_dim0',
-                  'kurtosis_dim0', 'entropy_dim0', 'number_dim0',
-                  'birth_rate_dim1',
-                  'death_rate_dim1',
-                  'mean_persistence_dim1', 'max_persistence_dim1',
-                  'std_persistence_dim1', 'skewness_dim1', 'kurtosis_dim1',
-                  'entropy_dim1', 'number_dim1')
+name_to_save
 
 
-working_dir<-'/mnt/onetouch/TDA/TDA_output/'
-
-
+###
 
 
 # Initialize a data frame to store the p-values, along with span and variable name
@@ -542,64 +415,50 @@ z_norm<-function(df, var){
 
 extract_participant_info<-function(df){
   df$Participant <- sub(".*[Ss][Ee][Rr]([0-9]{3}).*", "\\1", df$classification)
-    df$Session <- sub(".*\\.s([0-9]+).*", "\\1", df$classification)
-    return(df)
+  df$Session <- sub(".*\\.s([0-9]+).*", "\\1", df$classification)
+  return(df)
 }
 
 df_names=c('SER_IPSP','SER_monologs','PEM_df', 'SER_combined', 'Semi_combined')#'SER_monologs',
 
-df_name<-df_names[[5]]
+df_name<-df_names[[4]]
 image_save_dir='/home/ll16598/Documents/POSTDOC/TDA/significant_plots/'
 
 ###
 combine_SER<-function(){
-csv_file1 <- paste0(working_dir, 'SER_monologs', "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
-df_with_tda1 <- read.csv(csv_file1)
-df_with_tda1<-extract_participant_info(df_with_tda1)
-df_with_tda1$Drug[df_with_tda1$Drug == 0.00] <- "PL"
-df_with_tda1$Drug <- factor(df_with_tda1$Drug, levels = c("PL", "0.75","1.5"))
+  csv_file1 <- paste0(working_dir, 'SER_monologs', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+  df_with_tda1 <- read.csv(csv_file1)
+  df_with_tda1<-extract_participant_info(df_with_tda1)
+  df_with_tda1$Drug[df_with_tda1$Drug == 0.00] <- "PL"
+  df_with_tda1$Drug <- factor(df_with_tda1$Drug, levels = c("PL", "0.75","1.5"))
   
-csv_file2 <- paste0(working_dir, 'SER_IPSP', "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
-df_with_tda2 <- read.csv(csv_file2)
-df_with_tda2$Drug[df_with_tda2$Drug == 0.00] <- "PL"
-df_with_tda2$Drug <- factor(df_with_tda2$Drug, levels = c("PL", "0.75","1.5"))
-df_with_tda1$task<-'monolog'
-df_with_tda2$task<-'semi'
+  csv_file2 <- paste0(working_dir, 'SER_IPSP', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
 
-df_with_tda1$edge_density      <- df_with_tda1$edges / choose(df_with_tda1$nodes, 2)
-df_with_tda1$triangle_density  <- df_with_tda1$tris  / choose(df_with_tda1$nodes, 3)
-df_with_tda1$tetra_density     <- df_with_tda1$tetra / choose(df_with_tda1$nodes, 4)
-df_with_tda2$edge_density      <- df_with_tda2$edges / choose(df_with_tda2$nodes, 2)
-df_with_tda2$triangle_density  <- df_with_tda2$tris  / choose(df_with_tda2$nodes, 3)
-df_with_tda2$tetra_density     <- df_with_tda2$tetra / choose(df_with_tda2$nodes, 4)
-
-common_cols <- intersect(names(df_with_tda1), names(df_with_tda2))
-df_with_tda1 <- df_with_tda1[common_cols]
-df_with_tda2 <- df_with_tda2[common_cols]
-df_with_tda1<-z_norm(df_with_tda1,var)#I normalise separately if it is combined df
-df_with_tda2<-z_norm(df_with_tda2,var)
-df_with_tda <- rbind(df_with_tda1, df_with_tda2)
-return(df_with_tda)}
+  df_with_tda2 <- read.csv(csv_file2)
+  df_with_tda2$Drug[df_with_tda2$Drug == 0.00] <- "PL"
+  df_with_tda2$Drug <- factor(df_with_tda2$Drug, levels = c("PL", "0.75","1.5"))
+  df_with_tda1$task<-'monolog'
+  df_with_tda2$task<-'semi'
+  common_cols <- intersect(names(df_with_tda1), names(df_with_tda2))
+  df_with_tda1 <- df_with_tda1[common_cols]
+  df_with_tda2 <- df_with_tda2[common_cols]
+  df_with_tda1<-z_norm(df_with_tda1,var)#I normalise separately if it is combined df
+  df_with_tda2<-z_norm(df_with_tda2,var)
+  df_with_tda <- rbind(df_with_tda1, df_with_tda2)
+  return(df_with_tda)}
 
 combine_semi<-function(){
-  csv_file1 <- paste0(working_dir, 'PEM_df', "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
+  csv_file1 <- paste0(working_dir, 'PEM_df', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
   df_with_tda1 <- read.csv(csv_file1)
   df_with_tda1$Drug <- factor(df_with_tda1$Drug, levels = c("PL", "MDMA"))
   
-  csv_file2 <- paste0(working_dir, 'SER_IPSP', "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
+  csv_file2 <- paste0(working_dir, 'SER_IPSP', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
   df_with_tda2 <- read.csv(csv_file2)
   df_with_tda2$Drug[df_with_tda2$Drug == 0.00] <- "PL"
   df_with_tda2$Drug[df_with_tda2$Drug == 1.5] <- "MDMA"
   df_with_tda2$Drug <- factor(df_with_tda2$Drug, levels = c("PL", "MDMA"))
   df_with_tda1$task<-'monolog'
   df_with_tda2$task<-'semi'
-  
-  df_with_tda1$edge_density      <- df_with_tda1$edges / choose(df_with_tda1$nodes, 2)
-  df_with_tda1$triangle_density  <- df_with_tda1$tris  / choose(df_with_tda1$nodes, 3)
-  df_with_tda1$tetra_density     <- df_with_tda1$tetra / choose(df_with_tda1$nodes, 4)
-  df_with_tda2$edge_density      <- df_with_tda2$edges / choose(df_with_tda2$nodes, 2)
-  df_with_tda2$triangle_density  <- df_with_tda2$tris  / choose(df_with_tda2$nodes, 3)
-  df_with_tda2$tetra_density     <- df_with_tda2$tetra / choose(df_with_tda2$nodes, 4)
   
   common_cols <- intersect(names(df_with_tda1), names(df_with_tda2))
   df_with_tda1 <- df_with_tda1[common_cols]
@@ -617,43 +476,47 @@ p_vals_df <- data.frame(span = numeric(),
                         tukey_PL_vs_1.5  = numeric(),
                         tukey_0.75_vs_1.5 = numeric(),
                         stringsAsFactors = FALSE)
-df_name
-for (span in c(80,60,40,20)) {
+#df_with_tda$DET
+for (span in c(80,70,60,50,40)) {
   if (!grepl("combined", df_name)) {
-    csv_file <- paste0(working_dir, df_name, "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
-  df_with_tda <- read.csv(csv_file)
-  nrow(df_with_tda)}
+    csv_file <- paste0(working_dir, df_name, "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+    df_with_tda <- read.csv(csv_file)
+    nrow(df_with_tda)}
   
   if (df_name=='SER_monologs'){
     df_with_tda<-extract_participant_info(df_with_tda)
-  df_with_tda$Drug[df_with_tda$Drug == 0.00] <- "PL"
-  df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "0.75","1.5"))}else if (df_name=='SER_IPSP'){
     df_with_tda$Drug[df_with_tda$Drug == 0.00] <- "PL"
-    df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "0.75","1.5"))}
-    
+    df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "0.75","1.5"))}else if (df_name=='SER_IPSP'){
+      df_with_tda$Drug[df_with_tda$Drug == 0.00] <- "PL"
+      df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "0.75","1.5"))}
+  
   for (var in variable_list) {
     if (df_name=='SER_combined') {
       df_with_tda<-combine_SER()
     }else if (df_name=='Semi_combined') {
       df_with_tda<-combine_semi()
     }
-    df_with_tda<-subset(df_with_tda,df_with_tda$nodes>3)
+  #  df_with_tda<-subset(df_with_tda,df_with_tda$nodes>3)
     # Recode and order Drug: change 0.00 to "PL" and set levels as PL, 0.75, 1.5
-
+    
     df_with_tda <- df_with_tda %>% filter(!is.na(.[['Drug']]))
     
     df_with_tda$Participant <- as.factor(df_with_tda$Participant)
+    # if (!grepl("combined", df_name)) {
+    #   df_with_tda$edge_density      <- df_with_tda$edges / choose(df_with_tda$nodes, 2)
+    #   df_with_tda$triangle_density  <- df_with_tda$tris  / choose(df_with_tda$nodes, 3)
+    #   df_with_tda$tetra_density     <- df_with_tda$tetra / choose(df_with_tda$nodes, 4)}
     if (!grepl("combined", df_name)) {
-    df_with_tda$edge_density      <- df_with_tda$edges / choose(df_with_tda$nodes, 2)
-    df_with_tda$triangle_density  <- df_with_tda$tris  / choose(df_with_tda$nodes, 3)
-    df_with_tda$tetra_density     <- df_with_tda$tetra / choose(df_with_tda$nodes, 4)}
-    if (!grepl("combined", df_name)) {
-    df_with_tda <- z_norm(df_with_tda, var)}
+      df_with_tda <- z_norm(df_with_tda, var)}
+    
+    df_with_tda <- df_with_tda %>% filter(!is.na(.[[var]]))
+    
     df_with_tda$variable <- df_with_tda$z_score
-   # df_with_tda$variable <- df_with_tda[[var]]
+    print(length(df_with_tda$variable))
+    # df_with_tda$variable <- df_with_tda[[var]]
     if (!grepl("combined", df_name)) {
       model <- lmer(variable ~ Drug + (1 | Participant), data = df_with_tda)}else{
-      model <- lmer(variable ~ Drug + task+(1 | Participant), data = df_with_tda)}
+        model <- lmer(variable ~ Drug + task+(1 | Participant), data = df_with_tda)}
     anova_model <- car::Anova(model, type = "II")
     anova_p_value <- anova_model[1, 3]
     
@@ -688,18 +551,311 @@ for (span in c(80,60,40,20)) {
 dir_save_p='/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/stats_results/'
 # Save the collected p-values to a CSV file
 write.csv(p_vals_df, file = paste0(dir_save_p, df_name, "_p_values.csv"), row.names = FALSE)
+dim_reduction=50
 
+
+
+p_vals_df <- data.frame(span = numeric(),
+                        variable = character(),
+                        anova_p_value = numeric(),
+                        tukey_MDMAvsMA = numeric(),
+                        tukey_PL_vs_MA  = numeric(),
+                        tukey_PL_vs_MDMA = numeric(),
+                        e_MDMAvsMA = numeric(),
+                        e_PL_vs_MA  = numeric(),
+                        e_PL_vs_MDMA = numeric(),
+                        stringsAsFactors = FALSE)
+
+analysis='TDA'
+if (analysis=='TDA'){
+  variable_list<- c('rt',
+                    #'rt_centroid', 
+                    'density',
+                    'edges',
+                    'nodes',
+                    #   'diameter',
+                    # 'wighted_diameter',
+                    'shortest_path_weighted','shortest_path_unweighted',
+                    #  'num_triangles', 'num_tetrahedra',
+                    'modularity_louvain', 'modularity_unw','spectral_gap','num_comms_unw','num_comms',
+                    'clustering_coefficient', 'max_degree',
+                    'mean_degree', 'max_betweenness', 'mean_betweenness', 'max_strength',
+                    'mean_strength', 
+                    'fiedler_value', 'largest_laplacian_eigenvalue',
+                    'death_rate_dim0', 'mean_persistence_dim0',
+                    'max_persistence_dim0', 'std_persistence_dim0', 'skewness_dim0',
+                    'kurtosis_dim0', 'entropy_dim0', 'number_dim0',
+                    
+                    'birth_rate_dim1',
+                    'death_rate_dim1',
+                    'mean_persistence_dim1', 'max_persistence_dim1',
+                    'std_persistence_dim1', 'skewness_dim1', 'kurtosis_dim1',
+                    'entropy_dim1', 'number_dim1')
+  #  working_dir <- "/media/ll16598/One Touch/TDA_output_filtered/sparse_0.5/"
+  working_dir<-'/mnt/onetouch/TDA/TDA_output/'
+  
+}
+test_plot<-function(model, var,sp,df_with_tda,save_path=NULL){
+  print(var)
+  
+  # Perform Tukey post hoc comparisons on the Drug factor
+  tukey_comp <- glht(model, linfct = mcp(Drug = "Tukey"))
+  tukey_summary <- summary(tukey_comp)
+  print(tukey_summary)
+  
+  # Create the combined plot
+  p <- ggplot(df_with_tda, aes_string(x = "Drug", y = var)) +
+    # Boxplot without default outliers
+    geom_boxplot(outlier.shape = NA) +
+    # Beeswarm points, colored by Participant
+    geom_beeswarm(aes(color = Participant), size = 3, cex = 3) +
+    theme_bw() +
+    theme(legend.position = "none") +
+    labs(title = paste("Boxplot and Beeswarm Plot for", var, ' ', sp),
+         x = "Drug",
+         y = var)
+  
+  print(p)
+  if (!is.null(save_path)) {
+    # Define the file name; here we use the variable name as part of the file name
+    ggsave(filename = save_path, plot = p, width = 8, height = 6)
+  }
+}
+df_with_tda
+for (span in c(80,60,40,20)){
+csv_file1 <- paste0(working_dir, 'MASM', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+csv_file2 <- paste0(working_dir, 'cleaned_DEI', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+if (analysis=='TDA'){
+csv_file1 <- paste0(working_dir, 'MASM',"_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")
+csv_file2 <- paste0(working_dir, 'cleaned_DEI', "_", span, "_mean_", dim_reduction, "_window_", analysis, "_results.csv")}
+
+df_with_tda1 <- read.csv(csv_file1)
+df_with_tda1$Drug<-df_with_tda1$condition
+df_with_tda1$Drug[df_with_tda1$Drug == "['PLC']"] <- "PL"
+df_with_tda1$Drug[df_with_tda1$Drug == "['MDMA']"] <- "MDMA"
+df_with_tda1$Drug[df_with_tda1$Drug == "['MA']"] <- "MA"
+
+
+
+df_with_tda2 <- read.csv(csv_file2)
+df_with_tda2$Drug<-df_with_tda2$condition
+df_with_tda2$Drug[df_with_tda2$Drug == "['PLC.txt']"] <- "PL"
+df_with_tda2$Drug[df_with_tda2$Drug == "['MDMA.txt']"] <- "MDMA"
+df_with_tda2$Drug[df_with_tda2$Drug == "['MA.txt']"] <- "MA"
+df_with_tda1$study<-'MASM'
+df_with_tda2$study<-'DEI'
+common_cols <- intersect(names(df_with_tda1), names(df_with_tda2))
+df_with_tda1 <- df_with_tda1[common_cols]
+df_with_tda2 <- df_with_tda2[common_cols]
+
+
+for (var in variable_list) {
+  df_with_tda1<-z_norm(df_with_tda1,var)#I normalise separately if it is combined df
+  df_with_tda2<-z_norm(df_with_tda2,var)
+  df_with_tda <- rbind(df_with_tda1, df_with_tda2)
+  df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "MDMA","MA"))
+  df_with_tda <- df_with_tda %>% filter(!is.na(.[['Drug']]))
+  df_with_tda$Participant <- as.factor(df_with_tda$participant)
+  
+  df_with_tda <- df_with_tda %>% filter(!is.na(.[[var]]))
+  df_with_tda$variable <- df_with_tda$z_score
+  #print(length(df_with_tda$variable))
+  # df_with
+  model <- lmer(variable ~ Drug + (1 |study/ Participant), data = df_with_tda)
+  anova_model <- car::Anova(model, type = "II")
+  anova_p_value <- anova_model[1, 3]
+
+  tukey_comp <- glht(model, linfct = mcp(Drug = "Tukey"), correction = "BH")
+  tukey_summary <- summary(tukey_comp)
+  
+  tukey_pvalues <- tukey_summary$test$pvalues
+  tukey_estimates<-tukey_summary$test$coefficients
+  # Extract individual p-values (names should be like "0.75 - PL", "1.5 - PL", "1.5 - 0.75")
+  p_tukey_MDMAvsMA <- tukey_pvalues[3]
+  p_tukey_PL_vs_MA  <- tukey_pvalues[2]
+  p_tukey_PL_vs_MDMA <- tukey_pvalues[1]
+  e_tukey_MDMAvsMA <- tukey_estimates[3]
+  e_tukey_PL_vs_MA  <- tukey_estimates[2]
+  e_tukey_PL_vs_MDMA <- tukey_estimates[1]
+  # Save the results to the data frame
+  p_vals_df <- rbind(p_vals_df, data.frame(span = span,
+                                           variable = var,
+                                           anova_p_value = anova_p_value,
+                                           tukey_MDMAvsMA = p_tukey_MDMAvsMA,
+                                           tukey_PL_vs_MA  = p_tukey_PL_vs_MA,
+                                           tukey_PL_vs_MDMA = p_tukey_PL_vs_MDMA,
+                                           e_MDMAvsMA = e_tukey_MDMAvsMA,
+                                           e_PL_vs_MA  = e_tukey_PL_vs_MA,
+                                           e_PL_vs_MDMA = e_tukey_PL_vs_MDMA,
+                                           stringsAsFactors = FALSE))
+  
+  # If overall anova is significant, print results and generate plot
+  if (anova_p_value < 0.05) {
+    print(var)
+    print(anova_model)
+    print(tukey_summary)
+    test_plot(model, var,as.character(span), df_with_tda, save_path = paste0(image_save_dir, df_name, '_', var, '_', as.character(span), '.png'))
+  }
+}}
+
+
+dir_save_p='/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/stats_results/'
+# Save the collected p-values to a CSV file
+write.csv(p_vals_df, file = paste0(dir_save_p, "small_talk_p_values.csv"), row.names = FALSE)
 p_vals_df
 
 
-step
 
+p_vals_df <- data.frame(span = numeric(),
+                        variable = character(),
+                        anova_p_value = numeric(),
+                        tukey_MDMAvsMA = numeric(),
+                        tukey_PL_vs_MA  = numeric(),
+                        tukey_PL_vs_MDMA = numeric(),
+                        e_MDMAvsMA = numeric(),
+                        e_PL_vs_MA  = numeric(),
+                        e_PL_vs_MDMA = numeric(),
+                        stringsAsFactors = FALSE)
+
+
+
+mat <- rbind('MDMA-PL'=c(0,1,0,0,0,0),
+  'MA-PL'=c(0,0,1,0,0,0),
+  'MA-MDMA'=c(0,-1,1,0,0,0)
+)
+
+
+for (var in variable_list) {
+  all_dfs <- list()
+for (span in c(50,40,30,20)){
+  csv_file1 <- paste0(working_dir, 'MASM', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+  df_with_tda1 <- read.csv(csv_file1)
+  df_with_tda1$Drug<-df_with_tda1$condition
+  df_with_tda1$Drug[df_with_tda1$Drug == "['PLC']"] <- "PL"
+  df_with_tda1$Drug[df_with_tda1$Drug == "['MDMA']"] <- "MDMA"
+  df_with_tda1$Drug[df_with_tda1$Drug == "['MA']"] <- "MA"
+  
+  csv_file2 <- paste0(working_dir, 'cleaned_DEI', "_", span, "_", dim_reduction, "_utterance_trajectory_results.csv")
+  
+  df_with_tda2 <- read.csv(csv_file2)
+  df_with_tda2$Drug<-df_with_tda2$condition
+  df_with_tda2$Drug[df_with_tda2$Drug == "['PLC.txt']"] <- "PL"
+  df_with_tda2$Drug[df_with_tda2$Drug == "['MDMA.txt']"] <- "MDMA"
+  df_with_tda2$Drug[df_with_tda2$Drug == "['MA.txt']"] <- "MA"
+  df_with_tda1$study<-'MASM'
+  df_with_tda2$study<-'DEI'
+  common_cols <- intersect(names(df_with_tda1), names(df_with_tda2))
+  df_with_tda1 <- df_with_tda1[common_cols]
+  df_with_tda2 <- df_with_tda2[common_cols]
+
+    df_with_tda1<-z_norm(df_with_tda1,var)#I normalise separately if it is combined df
+    df_with_tda2<-z_norm(df_with_tda2,var)
+    df_with_tda <- rbind(df_with_tda1, df_with_tda2)
+    df_with_tda$Drug <- factor(df_with_tda$Drug, levels = c("PL", "MDMA","MA"))
+    df_with_tda <- df_with_tda %>% filter(!is.na(.[['Drug']]))
+    df_with_tda$Participant <- as.factor(df_with_tda$participant)
+    df_with_tda <- df_with_tda %>% filter(!is.na(.[[var]]))
+    
+    df_with_tda$variable <- df_with_tda$z_score
+    df_with_tda$narrative <- factor(seq_len(nrow(df_with_tda)))
+    df_with_tda$sp<-span
+    all_dfs <- append(all_dfs, list(df_with_tda))
+}
+  combined_df <- dplyr::bind_rows(all_dfs)
+  model <- lmer(variable ~ Drug*sp + (1 |study/Participant/narrative), data = combined_df)
+  summary(model)
+  anova_model <- car::Anova(model, type = "III")
+  anova_p_value <- anova_model[4, 3]
+  anova_drug <- anova_model[2, 3]
+  if (anova_p_value>0.05){
+    model <- lmer(variable ~ Drug+sp + (1 |study/Participant/narrative), data = combined_df)
+    anova_model <- car::Anova(model, type = "II")
+    anova_p_value <- anova_model[1, 3]
+    tukey_comp <- glht(model, linfct = mcp(Drug = "Tukey"), correction = "BH")
+    tukey_summary <- summary(tukey_comp)
+    
+    tukey_pvalues <- tukey_summary$test$pvalues
+    tukey_estimates<-tukey_summary$test$coefficients
+    p_tukey_MDMAvsMA <- tukey_pvalues[3]
+    p_tukey_PL_vs_MA  <- tukey_pvalues[2]
+    p_tukey_PL_vs_MDMA <- tukey_pvalues[1]
+    e_tukey_MDMAvsMA <- tukey_estimates[3]
+    e_tukey_PL_vs_MA  <- tukey_estimates[2]
+    e_tukey_PL_vs_MDMA <- tukey_estimates[1]
+  }else{
+    
+    X <- model.matrix(~ Drug * sp, data = combined_df)
+    
+    # Find average row for each Drug group
+    drug_levels <- levels(combined_df$Drug)
+    avg_X_by_drug <- sapply(drug_levels, function(d) {
+      rows <- combined_df$Drug == d
+      colMeans(X[rows, , drop = FALSE])
+    })
+    
+    avg_X_by_drug <- t(avg_X_by_drug)  
+    mat <- rbind(
+      "MDMA - PL" = avg_X_by_drug["MDMA", ] - avg_X_by_drug["PL", ],
+      "MA - PL"   = avg_X_by_drug["MA",   ] - avg_X_by_drug["PL", ],
+      "MA - MDMA" = avg_X_by_drug["MA",   ] - avg_X_by_drug["MDMA", ]
+    )
+    differences <-glht(model, linfct = mat, correction='BH')
+    sum_dif=summary(differences)
+    e_tukey_MDMAvsMA <- sum_dif$test$coefficients[[3]]
+    e_tukey_PL_vs_MA  <- sum_dif$test$coefficients[[2]]
+    e_tukey_PL_vs_MDMA <- sum_dif$test$coefficients[[1]]
+    p_tukey_MDMAvsMA <-  sum_dif$test$pvalues[[3]]
+    p_tukey_PL_vs_MA  <-  sum_dif$test$pvalues[[2]]
+    p_tukey_PL_vs_MDMA <-  sum_dif$test$pvalues[[1]]
+  }
+  plot(model)  # residuals vs fitted
+  qqnorm(resid(model)); qqline(resid(model))  # normality of residuals
+  
+  
+
+  # Save the results to the data frame
+  p_vals_df <- rbind(p_vals_df, data.frame(span = span,
+                                           variable = var,
+                                           anova_p_value = anova_p_value,
+                                           tukey_MDMAvsMA = p_tukey_MDMAvsMA,
+                                           tukey_PL_vs_MA  = p_tukey_PL_vs_MA,
+                                           tukey_PL_vs_MDMA = p_tukey_PL_vs_MDMA,
+                                           e_MDMAvsMA = e_tukey_MDMAvsMA,
+                                           e_PL_vs_MA  = e_tukey_PL_vs_MA,
+                                           e_PL_vs_MDMA = e_tukey_PL_vs_MDMA,
+                                           stringsAsFactors = FALSE))
+  
+  if (anova_p_value<0.05){
+    print(var)
+    print(anova_model)
+    print(tukey_summary)
+
+   # test_plot(model, var,as.character(span), combined_df, save_path = paste0(image_save_dir, df_name, '_', var, '_', as.character(span), '.png'))
+  
+  }
+   } 
+  
+  dir_save_p='/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/stats_results/'
+  # Save the collected p-values to a CSV file
+  write.csv(p_vals_df, file = paste0(dir_save_p, "small_talk_p_values2.csv"), row.names = FALSE)
+  p_vals_df
+  
+
+if(df_name=='MASM'){
+  df_with_tda$Drug<-df_with_tda$condition
+  df_with_tda$Drug[df_with_tda$Drug == "['PLC']"] <- "PL"
+  df_with_tda$Drug[df_with_tda$Drug == "['MDMA']"] <- "MDMA"
+  df_with_tda$Drug[df_with_tda$Drug == "['MA']"] <- "MA"
+}else if(df_name=='cleaned_DEI'){
+
+  df_with_tda$participant_numbers_only <- as.numeric(gsub("\\D+", "", df_with_tda$participant))}
+  
+  
+  
 ####NOW MA
 JUST_SER=FALSE
-df_names=c('MASM', 'cleaned_DEI','SER1', 'MASM')#'SER_monologs',
-#df_names=c('SER_IPSP','SER_monologs','PEM_df')#'SER_monologs',
+df_names=c('MASM', 'cleaned_DEI','SER1')#'SER_monologs',
 
-#df_names=c('SER_IPSP','SER_monologs')#'SER_monologs',
 analysis
 window=80
 window='utterances'
@@ -709,24 +865,24 @@ POOL_SER=FALSE ##TO POOL THE SER EXPERIMENTAL CONDITIONS
 z_normalise=TRUE
 #var
 #df_with_tda$rt
-for (span in c(1)){
 meta_save_dir='/home/ll16598/Documents/POSTDOC/PSYCH_SEMANTICS/metanalysis_results/'
-for(initial_var in variable_list){
-  # We assume these variables are already defined somewhere above:
-  # working_dir, df_names, window, overlap, z_normalise, initial_var, etc.
-  # We'll create meta_data to accumulate effect sizes from each df_name
-  meta_data <- data.frame()
-  print(initial_var)
-  for (df_name in df_names) {
-    print(df_name)
-    # Decide on the CSV filename as in your original code
-    
-    wind <- as.character(window)
-    if (analysis=='syntax'){
-      csv_file <- paste0(working_dir, df_name, "_syntax_results.csv")
-    }else if(wind=='utterances'){csv_file <- paste0(working_dir, df_name, "_", span, "_mean_",dim_reduction,"_utterance_", analysis, "_results_seed3.csv")    }else{
-      step <- as.character(window * overlap)
-      csv_file <- paste0(working_dir, df_name, "_", wind, "_", step, "_", analysis, "_results.csv")}
+for (span in c(80,60,40,20)){
+  for(initial_var in variable_list){
+    # We assume these variables are already defined somewhere above:
+    # working_dir, df_names, window, overlap, z_normalise, initial_var, etc.
+    # We'll create meta_data to accumulate effect sizes from each df_name
+    meta_data <- data.frame()
+    print(initial_var)
+    for (df_name in df_names) {
+      print(df_name)
+      ## Decide on the CSV filename as in your original code
+      
+      wind <- as.character(window)
+      if (analysis=='word_freq'){
+        csv_file <- paste0(working_dir, df_name, "_word_freq.csv")                  ##MEAN if TDA
+      }else if (analysis=='trajectory'){
+        csv_file <- paste0(working_dir, df_name,'_',as.character(span),'_',dim_reduction, "_mahattan_utterance_trajectory_results.csv")                  ##MEAN if TDA
+      }
     df_with_tda <- read.csv(csv_file)
     if(df_name=='MASM'){
       df_with_tda$Drug<-df_with_tda$condition
@@ -739,7 +895,7 @@ for(initial_var in variable_list){
       df_with_tda$Drug[df_with_tda$Drug == "['MDMA.txt']"] <- "MDMA"
       df_with_tda$Drug[df_with_tda$Drug == "['MA.txt']"] <- "MA"
       df_with_tda$participant_numbers_only <- as.numeric(gsub("\\D+", "", df_with_tda$participant))
-      df_with_tda<-subset(df_with_tda,df_with_tda$participant_numbers_only>520)
+   #   df_with_tda<-subset(df_with_tda,df_with_tda$participant_numbers_only>520)
       
     }
     if (analysis=='TDA'){
@@ -894,10 +1050,9 @@ for(initial_var in variable_list){
   )
   
   forest_data <- rbind(study_data, overall_row)
-  if (analysis=='syntax'){
-    name_to_save= paste0(meta_save_dir, initial_var, "syntax_forest_plot_data.csv")
-  }else{  name_to_save= paste0(meta_save_dir, initial_var, "_", as.character(window), "_forest_plot_data.csv")
-  }
+
+  name_to_save= paste0(meta_save_dir, initial_var, "MA_forest_plot_data.csv")
+
   write.csv(
     forest_data, name_to_save, 
     row.names = FALSE)
